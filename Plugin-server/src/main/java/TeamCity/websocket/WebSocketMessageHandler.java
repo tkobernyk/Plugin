@@ -39,6 +39,10 @@ public class WebSocketMessageHandler extends WebSocketStreamingHandlerAdapter {
 
     @Override
     public void onOpen(WebSocket webSocket) throws IOException {
+        logger.info("INSIDE OPEN");
+        logger.info("TRANSPORT -> " + webSocket.resource().transport());
+        logger.info("IS OPEN -> " + webSocket.isOpen());
+        logger.info("IS OPEN -> " + webSocket.resource().getRequest().getRequestURI());
         webSocket.resource().addEventListener(new WebSocketEventListenerAdapter() {
             @Override
             public void onDisconnect(AtmosphereResourceEvent event) {

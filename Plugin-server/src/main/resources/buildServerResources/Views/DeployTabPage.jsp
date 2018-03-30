@@ -59,7 +59,6 @@
           data: dataRequestObject,
           success: function(data,status) {
             console.log(status);
-            getMessage();
           },
           error: function(error,status,xhr){
             console.log(status);
