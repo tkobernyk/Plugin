@@ -1,4 +1,5 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<script src="/plugins/Helix-Deploy.Plugin/Scripts/atmosphere.js"></script>
 <table class="deploy-runner form-group">
     <tr class="row borderBottom">
         <td style="padding: 5px">Build Id:</td>
@@ -58,40 +59,31 @@
           data: dataRequestObject,
           success: function(data,status) {
             console.log(status);
-            //jQuery('#output').html(data);
-            connect();
-            s
+            getMessage();
           },
           error: function(error,status,xhr){
             console.log(status);
           }
         });
+        getMessage();
     });
 </script>
 <script type="text/javascript">
-    var stompClient = null;
 
-    function connect() {
-        var socket = new SockJS('/deploy/run/chat.html');
-        stompClient = Stomp.over(socket);
-        stompClient.connect({}, function(frame) {
-            setConnected(true);
-            console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/messages', function(data) {
-                showMessageOutput(JSON.parse(data.body));
-            });
-        });
-    }
+  function getMessage(){
+    var request = { url: window['base_uri'] + '/websocketHandler',
+            contentType : "application/json",
+            transport : 'websocket'};
 
-    function disconnect() {
-        if(stompClient != null) {
-            stompClient.disconnect();
+        request.onOpen = function(response) {
+           alert('Hello');
+        };
+
+        request.onMessage = function (response) {
+            var message = response.responseBody;
+            jQuery('#output').html(message);
         }
-        setConnected(false);
-        console.log("Disconnected");
-    }
+        var subSocket = atmosphere.subscribe(request);
+   }
 
-    function showMessageOutput(data) {
-        jQuery('#output').html(data);
-    }
 </script>

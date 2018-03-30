@@ -5,6 +5,7 @@ public class Deploy {
     public String ProjectName;
     public String Environment;
     public String Phase;
+    public String psScript;
 
 
     @Override
