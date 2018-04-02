@@ -1,51 +1,81 @@
 package TeamCity.Controllers;
 
-import TeamCity.Helpers.PowerShellRunner;
 import TeamCity.Models.Deploy;
-import jetbrains.buildServer.controllers.BaseAjaxActionController;
-import jetbrains.buildServer.web.openapi.ControllerAction;
+import TeamCity.websockets.AsynchronoysMessageProcessing;
+import TeamCity.websockets.WebsocketMessageHandler;
+import com.profesorfalken.jpowershell.PowerShell;
+import jetbrains.buildServer.controllers.BaseController;
+import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
-import org.jdom.Element;
+import org.atmosphere.client.TrackMessageSizeInterceptor;
+import org.atmosphere.cpr.AtmosphereFramework;
+import org.atmosphere.cpr.AtmosphereInterceptor;
+import org.atmosphere.cpr.AtmosphereRequest;
+import org.atmosphere.cpr.AtmosphereResponse;
+import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
+import org.atmosphere.interceptor.BroadcastOnPostAtmosphereInterceptor;
+import org.atmosphere.interceptor.HeartbeatInterceptor;
+import org.atmosphere.interceptor.IdleResourceInterceptor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-public class DeployControllerAction extends BaseAjaxActionController implements ControllerAction {
+public class DeployControllerAction extends BaseController {
+    private AtmosphereFramework atmosphereFramework;
+    private final PluginDescriptor descriptor;
     private static final com.intellij.openapi.diagnostic.Logger Log =
             com.intellij.openapi.diagnostic.Logger.getInstance(DeployControllerAction.class.getName());
-    private final PluginDescriptor _descriptor;
-    public Map<String, Deploy> map = new ConcurrentHashMap<>();
-
-    public DeployControllerAction(@NotNull WebControllerManager controllerManager, @NotNull PluginDescriptor descriptor) {
-        super(controllerManager);
-        controllerManager.registerController("/deploy/run.html", this);
-        registerAction(this);
-        _descriptor = descriptor;
+    public DeployControllerAction(
+            @NotNull SBuildServer server,
+            @NotNull WebsocketMessageHandler websocketMessageHandler,
+            @NotNull WebControllerManager webControllerManager,
+            @NotNull PluginDescriptor descriptor
+    ) {
+        super(server);
+        this.atmosphereFramework = createAtmosphereFramework(websocketMessageHandler);
+        webControllerManager.registerController("/deploy/run.html", this);
+        this.descriptor = descriptor;
     }
 
+    @Nullable
     @Override
-    public boolean canProcess(@NotNull HttpServletRequest request) {
-        return "POST".equals(request.getMethod());
+    protected ModelAndView doHandle(@NotNull HttpServletRequest httpServletRequest, @NotNull HttpServletResponse httpServletResponse) throws Exception {
+        Log.info("REQUEST BODY " + httpServletRequest.getReader().readLine());
+        String psScriptPath = httpServletRequest.getServletContext().getRealPath(descriptor.getPluginResourcesPath("PSScripts/Deploy.ps1"));
+        httpServletRequest.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", Boolean.TRUE);
+        AsynchronoysMessageProcessing asynchronoysMessageProcessing = new AsynchronoysMessageProcessing();
+        asynchronoysMessageProcessing.setAtmosphereFramework(atmosphereFramework);
+        asynchronoysMessageProcessing.setAtmosphereRequest(AtmosphereRequest.wrap(httpServletRequest));
+        asynchronoysMessageProcessing.setAtmosphereResponse(AtmosphereResponse.wrap(httpServletResponse));
+        asynchronoysMessageProcessing.setScriptPath(psScriptPath);
+        asynchronoysMessageProcessing.setDeploy(getDeploy(httpServletRequest));
+        CompletableFuture.supplyAsync(asynchronoysMessageProcessing);
+        asynchronoysMessageProcessing.get();
+        return null;
+
     }
 
-    @Override
-    public void process(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @Nullable Element ajaxResponse) {
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_OK);
-        try {
-            Deploy deploy = getDeploy(request);
-            String psScriptPath = request.getServletContext().getRealPath(_descriptor.getPluginResourcesPath("PSScripts/Deploy.ps1"));
-            Log.info(psScriptPath);
-            map.put(deploy.BuildId, deploy);
-        } catch (Exception e) {
-            Log.error(e.getMessage(), e);
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        }
+    private AtmosphereFramework createAtmosphereFramework(@NotNull WebsocketMessageHandler websocketMessageHandler) {
+        AtmosphereFramework atmosphereFramework = new AtmosphereFramework();
+
+        List<AtmosphereInterceptor> interceptors = new ArrayList<AtmosphereInterceptor>();
+        interceptors.add(new AtmosphereResourceLifecycleInterceptor());
+        interceptors.add(new HeartbeatInterceptor());
+        interceptors.add(new IdleResourceInterceptor());
+        interceptors.add(new TrackMessageSizeInterceptor());
+        interceptors.add(new BroadcastOnPostAtmosphereInterceptor());
+
+        atmosphereFramework.addAtmosphereHandler("/", websocketMessageHandler, interceptors);
+
+        atmosphereFramework.init();
+        return atmosphereFramework;
     }
 
     private Deploy getDeploy(HttpServletRequest request) {
@@ -54,10 +84,7 @@ public class DeployControllerAction extends BaseAjaxActionController implements 
         deploy.ProjectName = request.getParameter("ProjectName");
         deploy.Environment = request.getParameter("Environment");
         deploy.Phase = request.getParameter("Phase");
-        Log.info("Deploy: " + deploy.toString());
         return deploy;
     }
-
-
 }
 

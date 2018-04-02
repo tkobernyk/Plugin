@@ -42,47 +42,72 @@
 
 </div>
 <script>
-    jQuery('#btnDeploy').on('click', function() {
-        /*var deploy = new Object();
-        deploy.buildId = jQuery('#buildId').text();
-        deploy.projectName = jQuery('#projectName').text();
-        deploy.environment = jQuery("#environment option:selected").text()*/
-        var dataRequestObject = {
-            BuildId:jQuery('#buildId').text(),
-            ProjectName:jQuery('#projectName').text(),
-            Environment:jQuery("#environment option:selected").text(),
-            Phase:jQuery('#Phase').text()
-        };
-        jQuery.ajax({
-          url: "/deploy/run.html",
-          type: "POST",
-          data: dataRequestObject,
-          success: function(data,status) {
-            console.log(status);
-          },
-          error: function(error,status,xhr){
-            console.log(status);
-          }
-        });
-        getMessage();
-    });
+jQuery( document ).ready(function() {
+    console.log( "ready!" );
+    getMessage();
+});
 </script>
 <script type="text/javascript">
+        function getMessage(){
+        var dataRequestObject = {
+                    BuildId:jQuery('#buildId').text(),
+                    ProjectName:jQuery('#projectName').text(),
+                    Environment:jQuery("#environment option:selected").text(),
+                    Phase:jQuery('#Phase').text()
+                };
+           var socket = atmosphere;
+           var request = { url: window['base_uri'] + '/deploy/run.html',
+                       contentType : "application/json",
+                       logLevel : 'debug',
+                       transport : 'websocket' ,
+                       data: dataRequestObject,
+                       trackMessageLength : true,
+                       reconnectInterval : 5000 };
 
-  function getMessage(){
-    var request = { url: window['base_uri'] + '/websocketHandler',
-            contentType : "application/json",
-            transport : 'websocket'};
+                   request.onOpen = function(response) {
+                       transport = response.transport;
+                       request.uuid = response.request.uuid;
+                   };
 
-        request.onOpen = function(response) {
-           alert('Hello');
-        };
+                   request.onClientTimeout = function(r) {
+                       subSocket.push("request timeout");
+                       setTimeout(function (){
+                           subSocket = socket.subscribe(request);
+                       }, request.reconnectInterval);
+                   };
 
-        request.onMessage = function (response) {
-            var message = response.responseBody;
-            jQuery('#output').html(message);
-        }
-        var subSocket = atmosphere.subscribe(request);
-   }
+                   request.onReopen = function(response) {
+                       console.log('reopened');
+                   };
 
+                   request.onTransportFailure = function(errorMsg, request) {
+                       request.fallbackTransport = "long-polling";
+                   };
+
+                   request.onMessage = function (response) {
+                       var message = response.responseBody;
+                       jQuery('#output').append('<p>'+message+'</p>');
+                   };
+
+                   request.onClose = function(response) {
+                        console.log('onClose');
+                   };
+
+                   request.onError = function(response) {
+                      console.log('error');
+                   };
+
+                   request.onReconnect = function(request, response) {
+                       console.log('reconnected');
+                   };
+
+                   subSocket = socket.subscribe(request);
+                   jQuery('#btnDeploy').on('click', function() {
+                       subSocket.push(atmosphere.util.stringifyJSON({ message: 'DONE'}));
+                    });
+
+
+
+
+    };
 </script>
