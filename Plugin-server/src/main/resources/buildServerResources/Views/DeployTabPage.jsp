@@ -1,5 +1,4 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<script src="/plugins/Helix-Deploy.Plugin/Scripts/atmosphere.js"></script>
 <table class="deploy-runner form-group">
     <tr class="row borderBottom">
         <td style="padding: 5px">Build Id:</td>
@@ -44,64 +43,50 @@
 <script>
 jQuery( document ).ready(function() {
     console.log( "ready!" );
-    getMessage();
+
+
+     var data = {
+         BuildId: jQuery('#buildId').text(),
+         ProjectName: jQuery('#projectName').text(),
+         Environment: jQuery('#environment option:selected').text(),
+         Phase: jQuery('#Phase').text()
+     }
+
+    jQuery("#btnDeploy").on("click", function(event) {
+        BS.ajaxRequest(window['base_uri'] + '/deploy/run.html', {
+              method: 'post',
+              data: data,
+              onComplete: function (response) {
+                triggerMessage();
+                console.log("/deploy/run.html:onComplete()");
+              }
+         });
+    });
 });
 </script>
 <script type="text/javascript">
-       function getMessage()
-       {
-           jQuery('#btnDeploy')
-               .on('click', function ()
-               {
-                   var socket = atmosphere;
-                   var data = {
-                         BuildId: jQuery('#buildId').text(),
-                         ProjectName: jQuery('#projectName').text(),
-                         Environment: jQuery('#environment option:selected').text(),
-                         Phase: jQuery('#Phase').text()
-                     }
-                   var request = {
-                       url: window['base_uri'] + '/deploy/run.html?' +atmosphere.util.param(data),
-                       contentType: "application/json",
-                       logLevel: 'debug',
-                       transport: 'sse',
-                       method: "GET",
-                       trackMessageLength: true,
-                       reconnectInterval: 5000
-                   };
-                   request.onOpen = function (response)
-                   {
-                       console.log("onOpen");
-                   };
-                   request.onClientTimeout = function (r)
-                   {
-                       subSocket.push("request timeout");
+function triggerMessage(){
+    var poller = BS.periodicalExecutor(function () {
+    var result = $j.Deferred();
+    console.log("triggerMessage()");
+    BS.ajaxRequest(window['base_uri'] + '/messages/getMessage.html', {
+      method: 'post',
+      onComplete: function (response) {
+         console.log("/messages/getMessage.html:onComplete()");
+         jQuery("#output").append("<div>" + response.responseText + "</div>")
+         if (response && response.status != 200) {
+           BS.ServerLink.waitUntilServerIsAvailable(BS.SubscriptionManager.start);
+           poller.stop();
+           poller = null;
+           return;
+         }
+         var messages = response.responseText.trim();
+         result.resolve();
+      }
+    });
+    return result.promise();
+    }, BS.internalProperty('teamcity.ui.pollInterval') * 1000);
+    poller.start();
+}
 
-                   };
-                   request.onReopen = function (response)
-                   {
-                       console.log('reopened');
-                   };
-                   request.onTransportFailure = function (errorMsg, request)
-                   {
-                       console.log("onTransportFailure");
-                   };
-                   request.onMessage = function (response)
-                   {
-                       console.log("on message");
-                       var message = response.responseBody;
-                       jQuery('#output')
-                           .append('<p>' + message + '</p>');
-                   };
-                   request.onClose = function (response)
-                   {
-                       console.log('onClose');
-                   };
-                   request.onError = function (response)
-                   {
-                       console.log('error');
-                   };
-                   subSocket = socket.subscribe(request);
-               });
-       };
 </script>

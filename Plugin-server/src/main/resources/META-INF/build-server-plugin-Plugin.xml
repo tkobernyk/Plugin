@@ -8,5 +8,5 @@
     <bean class="TeamCity.Controllers.DeployControllerAction"/>
     <bean class="TeamCity.UI.Tabs.SettingsAdminPage"/>
     <bean class="TeamCity.Controllers.SettingAdminController"/>
-    <bean class="TeamCity.websockets.WebsocketMessageHandler"/>
+    <bean class="TeamCity.Controllers.MessageListener"/>
 </beans>

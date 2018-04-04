@@ -1,11 +1,11 @@
 param([String]$projectName,[Int32]$buildId,[String]$environment)
 $localPath = "C:\Deployment"
 Write-Host "projectName: $projectName"
-Write-Host "Delay: 10000"
-Start-Sleep -Milliseconds 10000
+Write-Host "Delay: 3000"
+Start-Sleep -Milliseconds 3000
 Write-Host "buildId: $buildId"
-Write-Host "Delay: 10000"
-Start-Sleep -Milliseconds 10000
+Write-Host "Delay: 3000"
+Start-Sleep -Milliseconds 3000
 Write-Host "environment: $environment"
 Switch($projectName)
 {
