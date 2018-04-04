@@ -53,39 +53,30 @@ jQuery( document ).ready(function() {
            jQuery('#btnDeploy')
                .on('click', function ()
                {
-                   var dataRequestObject = {
-                       BuildId: jQuery('#buildId')
-                           .text(),
-                       ProjectName: jQuery('#projectName')
-                           .text(),
-                       Environment: jQuery("#environment option:selected")
-                           .text(),
-                       Phase: jQuery('#Phase')
-                           .text()
-                   };
                    var socket = atmosphere;
+                   var data = {
+                         BuildId: jQuery('#buildId').text(),
+                         ProjectName: jQuery('#projectName').text(),
+                         Environment: jQuery('#environment option:selected').text(),
+                         Phase: jQuery('#Phase').text()
+                     }
                    var request = {
-                       url: window['base_uri'] + '/deploy/run.html',
+                       url: window['base_uri'] + '/deploy/run.html?' +atmosphere.util.param(data),
                        contentType: "application/json",
                        logLevel: 'debug',
-                       transport: 'websocket',
-                       data: dataRequestObject,
+                       transport: 'sse',
+                       method: "GET",
                        trackMessageLength: true,
                        reconnectInterval: 5000
                    };
                    request.onOpen = function (response)
                    {
                        console.log("onOpen");
-                       transport = response.transport;
-                       request.uuid = response.request.uuid;
                    };
                    request.onClientTimeout = function (r)
                    {
                        subSocket.push("request timeout");
-                       setTimeout(function ()
-                       {
-                           subSocket = socket.subscribe(request);
-                       }, request.reconnectInterval);
+
                    };
                    request.onReopen = function (response)
                    {
@@ -94,7 +85,6 @@ jQuery( document ).ready(function() {
                    request.onTransportFailure = function (errorMsg, request)
                    {
                        console.log("onTransportFailure");
-                       request.fallbackTransport = "long-polling";
                    };
                    request.onMessage = function (response)
                    {
@@ -111,12 +101,7 @@ jQuery( document ).ready(function() {
                    {
                        console.log('error');
                    };
-
                    subSocket = socket.subscribe(request);
-                   subSocket.push(atmosphere.util.stringifyJSON(
-                   {
-                       message: 'DONE'
-                   }));
                });
        };
 </script>

@@ -3,7 +3,6 @@ package TeamCity.Controllers;
 import TeamCity.Models.Deploy;
 import TeamCity.websockets.AsynchronoysMessageProcessing;
 import TeamCity.websockets.WebsocketMessageHandler;
-import com.profesorfalken.jpowershell.PowerShell;
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
 
@@ -37,6 +37,7 @@ public class DeployControllerAction extends BaseController {
     private final PluginDescriptor descriptor;
     private static final com.intellij.openapi.diagnostic.Logger Log =
             com.intellij.openapi.diagnostic.Logger.getInstance(DeployControllerAction.class.getName());
+
     public DeployControllerAction(
             @NotNull SBuildServer server,
             @NotNull WebsocketMessageHandler websocketMessageHandler,
@@ -52,7 +53,10 @@ public class DeployControllerAction extends BaseController {
     @Nullable
     @Override
     protected ModelAndView doHandle(@NotNull HttpServletRequest httpServletRequest, @NotNull HttpServletResponse httpServletResponse) throws Exception {
-        Log.info("REQUEST BODY " + httpServletRequest.getReader().readLine());
+        Deploy deploy = getDeploy(httpServletRequest);
+        Log.info("REQUEST METHOD " + httpServletRequest.getMethod());
+        Log.info("DEPLOY : " + deploy.toString());
+        Log.info("REQUEST BODY " + httpServletRequest.getReader().lines().collect(Collectors.joining()));
         Log.info("Thread name inside DeployControllerAction : " + Thread.currentThread().getName());
         String psScriptPath = httpServletRequest.getServletContext().getRealPath(descriptor.getPluginResourcesPath("PSScripts/Deploy.ps1"));
         httpServletRequest.setAttribute("org.apache.catalina.ASYNC_SUPPORTED", Boolean.TRUE);
@@ -62,8 +66,8 @@ public class DeployControllerAction extends BaseController {
         asynchronoysMessageProcessing.setAtmosphereResponse(AtmosphereResponse.wrap(httpServletResponse));
         asynchronoysMessageProcessing.setScriptPath(psScriptPath);
         asynchronoysMessageProcessing.setDeploy(getDeploy(httpServletRequest));
-        CompletableFuture<String> completableFuture = supplyAsync(asynchronoysMessageProcessing,excecutor);
-        while(!completableFuture.isDone()){
+        CompletableFuture<String> completableFuture = supplyAsync(asynchronoysMessageProcessing, excecutor);
+        while (!completableFuture.isDone()) {
             completableFuture.get();
         }
         return null;
