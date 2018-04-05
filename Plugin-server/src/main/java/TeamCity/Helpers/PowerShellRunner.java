@@ -13,7 +13,7 @@ public class PowerShellRunner {
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
             String powerShellExecutable = "powershell.exe";
             pb = new ProcessBuilder( powerShellExecutable,
-                    "-ExecutionPolicy", "Bypass", "-NoExit", "-File", "D:\\IDCO\\Source\\SectorSPDR\\spdrs\\Scripts\\SetupSpdr\\RecreateSpdr.ps1");//scriptPath, params);
+                    "-ExecutionPolicy", "Bypass", "-NoExit", "-File", scriptPath, params);
         }
         Process powerShellProcess = pb.start();
         if (!powerShellProcess.isAlive()) {
