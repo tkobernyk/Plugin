@@ -26,10 +26,14 @@ public class MessageListener extends BaseController {
     @Override
     protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
         Log.info("INSIDE MESSAGE TRIGGER");
-        String message = DeployControllerAction.blockingQueue.take();
-        Log.info("get message from queue " + message);
-        response.getOutputStream().write(message.getBytes());
-        response.getOutputStream().flush();
+        StringBuilder builder = new StringBuilder();
+        int i = 0;
+        while (!DeployControllerAction.blockingQueue.isEmpty() && i < 20) {
+            builder.append(DeployControllerAction.blockingQueue.take());
+           i++;
+        }
+        Log.info("get message from queue " + builder.toString());
+        response.getOutputStream().write(builder.toString().getBytes());
         return null;
     }
 }

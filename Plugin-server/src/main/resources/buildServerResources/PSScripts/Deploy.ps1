@@ -12,4 +12,4 @@ Switch($projectName)
     "eSignal.ETF" { $projectFolder = "esignaletf"; break}
 }
 $fullPath = "$localPath\$projectFolder"
-#Invoke-Command -ComputerName webhlxdeploynja.production.ofs -ScriptBlock { param($pBuildId, $pEnvironment, $pFullPath) & ("$pFullPath\Run.ps1") -buildId $pBuildId -environment $pEnvironment } -ArgumentList $buildId, $environment, $fullPath
+Invoke-Command -ComputerName webhlxdeploynja.production.ofs -ScriptBlock { param($pBuildId, $pEnvironment, $pFullPath) & ("$pFullPath\Run.ps1") -buildId $pBuildId -environment $pEnvironment } -ArgumentList $buildId, $environment, $fullPath
