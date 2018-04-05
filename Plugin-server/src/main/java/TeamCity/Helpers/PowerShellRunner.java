@@ -28,7 +28,7 @@ public class PowerShellRunner {
                 powerShellProcess.getInputStream()));
         while ((line = bufferedReader.readLine()) != null) {
             if(!line.contains("Windows PowerShell") && !line.contains("Copyright (C) 2016 Microsoft Corporation. All rights reserved."))
-                blockingQueue.add(line + " <br />");
+                blockingQueue.add(line + (!line.isEmpty() ? " <br />" : ""));
         }
         bufferedReader.close();
         BufferedReader errorReader = new BufferedReader(new InputStreamReader(

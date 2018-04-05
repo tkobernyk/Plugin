@@ -62,6 +62,7 @@ jQuery( document ).ready(function() {
                 console.log("/deploy/run.html:onComplete()");
               }
          });
+         jQuery("#btnDeploy").prop("disabled", true );
     });
 });
 </script>
@@ -74,12 +75,16 @@ function triggerMessage(){
       method: 'post',
       onComplete: function (response) {
          console.log("/messages/getMessage.html:onComplete()");
-         jQuery("#output").append("<div>" + response.responseText + "</div>")
-         $("html, body").animate({ scrollTop: $(document).height() }, 1000);
+         if(response.responseText !== "")
+         {
+            jQuery("#output").append("<div>" + response.responseText + "</div>");
+            jQuery("html, body").animate({ scrollTop: jQuery(document).height() }, 1000);
+         }
          if (response && response.status != 200) {
            BS.ServerLink.waitUntilServerIsAvailable(BS.SubscriptionManager.start);
            poller.stop();
            poller = null;
+           jQuery("#btnDeploy").prop("disabled", false )
            return;
          }
          var messages = response.responseText.trim();
