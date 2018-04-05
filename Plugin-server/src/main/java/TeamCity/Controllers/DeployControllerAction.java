@@ -2,7 +2,6 @@ package TeamCity.Controllers;
 
 import TeamCity.Helpers.PowerShellRunner;
 import TeamCity.Models.Deploy;
-import com.profesorfalken.jpowershell.PowerShellResponse;
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.SBuildServer;
 import jetbrains.buildServer.web.openapi.PluginDescriptor;
@@ -35,11 +34,8 @@ public class DeployControllerAction extends BaseController {
     @Nullable
     @Override
     protected ModelAndView doHandle(@NotNull HttpServletRequest httpServletRequest, @NotNull HttpServletResponse httpServletResponse) throws Exception {
-        Deploy deploy = getDeploy(httpServletRequest);
         String psScriptPath = httpServletRequest.getServletContext().getRealPath(descriptor.getPluginResourcesPath("PSScripts/Deploy.ps1"));
-        PowerShellResponse response = PowerShellRunner.run(psScriptPath, deploy);
-        Log.info("MESSAGE INSIDE CYCLE  " + response.getCommandOutput());
-        blockingQueue.add(response.getCommandOutput());
+        PowerShellRunner.run(blockingQueue, psScriptPath, "\"esignal\", 123, \"dev\"");
         return null;
 
     }
