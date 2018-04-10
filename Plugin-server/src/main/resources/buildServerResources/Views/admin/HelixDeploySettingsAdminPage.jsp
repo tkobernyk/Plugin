@@ -3,7 +3,7 @@
 <%--<bs:linkCSS dynamic="${true}">
   ${teamcityPluginResourcesPath}Styles/bootstrap.min.css
 </bs:linkCSS>--%>
-<form action="${actionUrl}" id="frmSettingsForm" method="POST">
+<form action="/saveHelixDeploySettings" id="frmSettingsForm" method="POST">
     <table>
         <tr>
             <td>
@@ -13,20 +13,6 @@
                 <input type="text" style="min-width:500px; width:500px;" id="txtPSScriptPath" value="${powershellpath}" placeholder="PowerShell script path" />
             </td>
         </tr>
-            <c:choose>
-                <c:when test="${not empty environments}">
-                    <c:forEach var="environment" items="${environments}">
-                        <tr>
-                            <td>
-                                <span id="environment" class="label label-default">Environment: </span>
-                            </td>
-                            <td>
-                                <input type="text" id="txtEnvironment" value="${environment}" placeholder="Environment" />
-                            </td>
-                        <tr>
-                    </c:forEach>
-                </c:when>
-            </c:choose>
         <tr>
             <td colspan="2">
                 <input type="button" class="btn btn-default" id="btnSave" value="Save" />
@@ -34,3 +20,17 @@
         </tr>
     </table>
 </form>
+<script>
+jQuery( "#btnSave" ).on( "click", function() {
+  var data = {powerShellScriptPath: jQuery("#txtPSScriptPath").val()}
+  BS.ajaxRequest(window['base_uri'] + '/saveHelixDeploySettings.html', {
+                method: 'post',
+                parameters: jQuery.param(data),
+                contentType: 'application/json',
+                onComplete: function (response) {
+                  console.log("done");
+                }
+           });
+  console.log( jQuery(this).serialize() );
+});
+</script>

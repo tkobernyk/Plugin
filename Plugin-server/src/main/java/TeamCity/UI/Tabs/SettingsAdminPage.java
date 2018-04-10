@@ -1,5 +1,6 @@
 package TeamCity.UI.Tabs;
 
+import TeamCity.Helpers.PropertyRepository;
 import TeamCity.Models.HelixDeploySettings;
 import jetbrains.buildServer.controllers.admin.AdminPage;
 import jetbrains.buildServer.web.openapi.CustomTab;
@@ -10,9 +11,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
-
-import TeamCity.Helpers.PropertyRepository;
 
 public class SettingsAdminPage extends AdminPage implements CustomTab {
     private final PluginDescriptor _descriptor;
@@ -33,18 +33,18 @@ public class SettingsAdminPage extends AdminPage implements CustomTab {
     public String getGroup() {
         return "Custom Settings";
     }
+
     @Override
-    public void fillModel(@NotNull Map<String, Object> model, @NotNull HttpServletRequest request)
-    {
+    public void fillModel(@NotNull Map<String, Object> model, @NotNull HttpServletRequest request) {
         PropertyRepository repository = new PropertyRepository(request.getServletContext(), _descriptor.getPluginResourcesPath("settings.properties"));
         HelixDeploySettings settings = new HelixDeploySettings();
         try {
-            settings.PowerShellScriptPath = repository.getProperties().getProperty("powershellpath", "{teamcityPluginResourcesPath}/PSScript/Deploy.ps1");
-            settings.Environments = repository.getProperties().getProperty("environments", "Dev,Test,Show,Production").split(",");
+            settings.setPowerShellScriptPath(repository.getProperties().getProperty("powershellpath", "{teamcityPluginResourcesPath}/PSScript/Deploy.ps1"));
+            settings.setEnvironments(Arrays.asList(repository.getProperties().getProperty("environments", "Dev,Test,Show,Production").split(",")));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        model.put("powershellpath", settings.PowerShellScriptPath);
-        model.put("environments", settings.Environments);
+        model.put("powershellpath", settings.getPowerShellScriptPath());
+        model.put("environments", settings.getEnvironments());
     }
 }
