@@ -1,8 +1,6 @@
 package TeamCity.Helpers;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.concurrent.BlockingQueue;
 
 public class PowerShellRunner {
@@ -10,32 +8,39 @@ public class PowerShellRunner {
             com.intellij.openapi.diagnostic.Logger.getInstance(PowerShellRunner.class.getName());
 
     public static void run(BlockingQueue<String> blockingQueue, String scriptPath, String params) throws IOException {
+        String line;
         ProcessBuilder pb = null;
         if (System.getProperty("os.name").toLowerCase().contains("win")) {
             String powerShellExecutable = "powershell.exe";
-            pb = new ProcessBuilder("cmd.exe", "/c", "chcp", "65001", ">", "NUL", "&", powerShellExecutable,
-                    "-ExecutionPolicy", "Bypass", "-NoExit", "-Command", "-");
+            pb = new ProcessBuilder( powerShellExecutable,
+                    "-ExecutionPolicy", "Bypass", "-NoExit", "-File", scriptPath, params);
         }
         Process powerShellProcess = pb.start();
         if (!powerShellProcess.isAlive()) {
             throw new RuntimeException(
                     "Cannot execute PowerShell. Please make sure that it is installed in your system. Errorcode:" + powerShellProcess.exitValue());
         }
+        //PrintWriter commandWriter = new PrintWriter(new OutputStreamWriter(new BufferedOutputStream(powerShellProcess.getOutputStream())), true);
+        //commandWriter.println(scriptPath + " " + params);
         powerShellProcess.getOutputStream().close();
-        String line;
-        System.out.println("Standard Output:");
+
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                 powerShellProcess.getInputStream()));
         while ((line = bufferedReader.readLine()) != null) {
-            blockingQueue.add(line);
+            if(!line.contains("Windows PowerShell") && !line.contains("Copyright (C) 2016 Microsoft Corporation. All rights reserved."))
+                blockingQueue.add(line + (!line.isEmpty() ? " <br />" : ""));
         }
         bufferedReader.close();
-        BufferedReader bufferedReader1 = new BufferedReader(new InputStreamReader(
+        BufferedReader errorReader = new BufferedReader(new InputStreamReader(
                 powerShellProcess.getErrorStream()));
-        while ((line = bufferedReader1.readLine()) != null) {
-            blockingQueue.add(line);
+        if(errorReader.ready()) {
+            blockingQueue.add("<div class='error'>");
+            while ((line = errorReader.readLine()) != null) {
+                blockingQueue.add(line);
+            }
+            blockingQueue.add("</div>");
         }
-        bufferedReader1.close();
+        errorReader.close();
         System.out.println("Done");
 
     }

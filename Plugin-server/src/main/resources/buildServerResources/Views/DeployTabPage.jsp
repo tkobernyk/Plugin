@@ -1,4 +1,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<style>
+    .error { color: red; }
+</style>
 <table class="deploy-runner form-group">
     <tr class="row borderBottom">
         <td style="padding: 5px">Build Id:</td>
@@ -43,9 +46,7 @@
 <script>
 jQuery( document ).ready(function() {
     console.log( "ready!" );
-
-
-     var data = {
+    var data = {
          BuildId: jQuery('#buildId').text(),
          ProjectName: jQuery('#projectName').text(),
          Environment: jQuery('#environment option:selected').text(),
@@ -53,14 +54,15 @@ jQuery( document ).ready(function() {
      }
 
     jQuery("#btnDeploy").on("click", function(event) {
+        triggerMessage();
         BS.ajaxRequest(window['base_uri'] + '/deploy/run.html', {
               method: 'post',
               data: data,
               onComplete: function (response) {
-                triggerMessage();
                 console.log("/deploy/run.html:onComplete()");
               }
          });
+         jQuery("#btnDeploy").prop("disabled", true );
     });
 });
 </script>
@@ -73,11 +75,16 @@ function triggerMessage(){
       method: 'post',
       onComplete: function (response) {
          console.log("/messages/getMessage.html:onComplete()");
-         jQuery("#output").append("<div>" + response.responseText + "</div>")
+         if(response.responseText !== "")
+         {
+            jQuery("#output").append("<div>" + response.responseText + "</div>");
+            jQuery("html, body").animate({ scrollTop: jQuery(document).height() }, 1000);
+         }
          if (response && response.status != 200) {
            BS.ServerLink.waitUntilServerIsAvailable(BS.SubscriptionManager.start);
            poller.stop();
            poller = null;
+           jQuery("#btnDeploy").prop("disabled", false )
            return;
          }
          var messages = response.responseText.trim();
@@ -85,7 +92,7 @@ function triggerMessage(){
       }
     });
     return result.promise();
-    }, BS.internalProperty('teamcity.ui.pollInterval') * 1000);
+    }, BS.internalProperty('teamcity.ui.pollInterval') * 250);
     poller.start();
 }
 

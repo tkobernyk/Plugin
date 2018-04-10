@@ -35,7 +35,10 @@ public class DeployControllerAction extends BaseController {
     @Override
     protected ModelAndView doHandle(@NotNull HttpServletRequest httpServletRequest, @NotNull HttpServletResponse httpServletResponse) throws Exception {
         String psScriptPath = httpServletRequest.getServletContext().getRealPath(descriptor.getPluginResourcesPath("PSScripts/Deploy.ps1"));
-        PowerShellRunner.run(blockingQueue, psScriptPath, "\"esignal\", 123, \"dev\"");
+        if(DeployControllerAction.blockingQueue.isEmpty()) {
+            Deploy deploy = getDeploy(httpServletRequest);
+            PowerShellRunner.run(blockingQueue, psScriptPath, deploy.toString());
+        }
         return null;
 
     }
@@ -43,10 +46,10 @@ public class DeployControllerAction extends BaseController {
 
     private Deploy getDeploy(HttpServletRequest request) {
         Deploy deploy = new Deploy();
-        deploy.BuildId = request.getParameter("BuildId");
-        deploy.ProjectName = request.getParameter("ProjectName");
-        deploy.Environment = request.getParameter("Environment");
-        deploy.Phase = request.getParameter("Phase");
+        deploy.setBuildId(request.getParameter("BuildId"));
+        deploy.setProjectName(request.getParameter("ProjectName"));
+        deploy.setEnvironment(request.getParameter("Environment"));
+        deploy.setPhase(request.getParameter("Phase"));
         return deploy;
     }
 }
