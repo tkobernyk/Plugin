@@ -57,7 +57,7 @@ jQuery( document ).ready(function() {
         triggerMessage();
         BS.ajaxRequest(window['base_uri'] + '/deploy/run.html', {
               method: 'post',
-              data: data,
+              parameters: jQuery.param(data),
               onComplete: function (response) {
                 console.log("/deploy/run.html:onComplete()");
               }

@@ -10,4 +10,5 @@
     <bean class="TeamCity.Controllers.SettingAdminController"/>
     <bean class="TeamCity.Controllers.MessageListener"/>
     <bean class="TeamCity.Controllers.DbAccessTest"/>
+    <bean class="TeamCity.powershell.PowerShellFactory"/>
 </beans>
