@@ -1,6 +1,7 @@
 package TeamCity.powershell;
 
 import TeamCity.exception.NoSupportedOSException;
+import TeamCity.models.Deploy;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,26 +11,30 @@ import java.io.InputStreamReader;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Predicate;
 
+@Getter
+@Setter
 public class PowerShellRunner {
     private static final com.intellij.openapi.diagnostic.Logger LOGGER =
             com.intellij.openapi.diagnostic.Logger.getInstance(PowerShellRunner.class.getName());
 
-    @Getter
-    @Setter
-    private DeployStatus status;
-
     private static Predicate<String> predicate = s -> !s.contains("Windows PowerShell")
             && !s.contains("Copyright (C) 2016 Microsoft Corporation. All rights reserved.");
 
-    public DeployStatus run(BlockingQueue<String> blockingQueue, String scriptPath, String params) throws IOException {
-        ProcessBuilder processBuilder = createProcessWindowsOS(scriptPath, params);
-        Process powerShellProcess = processBuilder.start();
-        setStatus(DeployStatus.IN_PROGRESS);
+    //TODO: rewrite to separate methods
+    public Deploy run(BlockingQueue<String> blockingQueue, String scriptPath, Deploy deploy) {
+        ProcessBuilder processBuilder = createProcessWindowsOS(scriptPath, deploy.getParametersAsString());
+        Process powerShellProcess = null;
+        try {
+            powerShellProcess = processBuilder.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        deploy.setDeployStatus(DeployStatus.IN_PROGRESS);
         //powerShellProcess.getOutputStream().close();
-        processOutput(powerShellProcess, blockingQueue);
-        processErrorOutput(powerShellProcess, blockingQueue);
-        setStatus(DeployStatus.SUCCESS);
-        return getStatus();
+        processOutput(powerShellProcess,blockingQueue, deploy);
+        processErrorOutput(powerShellProcess,blockingQueue, deploy);
+        deploy.setDeployStatus(DeployStatus.SUCCESS);
+        return deploy;
     }
 
     private ProcessBuilder createProcessWindowsOS(String scriptPath, String params) {
@@ -43,18 +48,18 @@ public class PowerShellRunner {
         throw new NoSupportedOSException("os.name should be windows");
     }
 
-    private void processOutput(Process powerShellProcess, BlockingQueue<String> blockingQueue) {
+    private void processOutput(Process powerShellProcess, BlockingQueue<String> blockingQueue, Deploy deploy) {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                 powerShellProcess.getInputStream()))) {
             LOGGER.info("PROCESS OUTPUT");
             bufferedReader.lines().filter(predicate).forEach(line -> addStringToBlockingQueue(blockingQueue, line));
         } catch (Exception e) {
-            setStatus(DeployStatus.FAILED);
+            deploy.setDeployStatus(DeployStatus.FAILED);
             LOGGER.error(e.getMessage(), e);
         }
     }
 
-    private void processErrorOutput(Process powerShellProcess, BlockingQueue<String> blockingQueue) {
+    private void processErrorOutput(Process powerShellProcess, BlockingQueue<String> blockingQueue, Deploy deploy) {
         try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(
                 powerShellProcess.getErrorStream()))) {
             if (errorReader.ready()) {
@@ -63,7 +68,7 @@ public class PowerShellRunner {
                 blockingQueue.add("</div>");
             }
         } catch (Exception e) {
-            setStatus(DeployStatus.FAILED);
+            deploy.setDeployStatus(DeployStatus.FAILED);
             LOGGER.error(e.getMessage(), e);
         }
     }

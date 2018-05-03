@@ -1,7 +1,7 @@
 package TeamCity.dao;
 
-import TeamCity.Models.Environment;
-import TeamCity.Models.HistoricalData;
+import TeamCity.models.Environment;
+import TeamCity.models.HistoricalData;
 import TeamCity.powershell.DeployStatus;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -16,10 +16,10 @@ public class HistoricalDataRowMapper implements RowMapper<HistoricalData> {
         historicalData.setId(resultSet.getLong("id"));
         historicalData.setLocalDateTime(resultSet.getTimestamp("localDateTime").toLocalDateTime());
         historicalData.setUserId(resultSet.getLong("userId"));
-        historicalData.setOutput(resultSet.getBlob("output"));
+        historicalData.setOutput(resultSet.getClob("output"));
         historicalData.setEnvironment(Environment.valueOf(resultSet.getString("environment")));
         historicalData.setProjectName(resultSet.getString("projectName"));
-        historicalData.setBuildId(resultSet.getInt("buildId"));
+        historicalData.setBuildId(resultSet.getString("buildId"));
         historicalData.setPhase(resultSet.getString("phase"));
         historicalData.setDeployStatus(DeployStatus.valueOf(resultSet.getString("deployStatus")));
         return historicalData;

@@ -1,4 +1,4 @@
-package TeamCity.Controllers;
+package TeamCity.controllers;
 
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.SBuildServer;

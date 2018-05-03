@@ -1,9 +1,9 @@
-package TeamCity.Models;
+package TeamCity.models;
 
 import TeamCity.powershell.DeployStatus;
 import lombok.Data;
 
-import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.Types;
 import java.time.LocalDateTime;
 
@@ -13,10 +13,10 @@ public class HistoricalData {
     private Long id;
     private LocalDateTime localDateTime;
     private Long userId;
-    private Blob output;
+    private Clob output;
     private Environment environment;
     private String projectName;
-    private int buildId;
+    private String buildId;
     private String phase;
     private DeployStatus deployStatus;
 

@@ -1,4 +1,4 @@
-package TeamCity.Helpers;
+package TeamCity.helpers;
 
 /**
  * Created by Mykhailo_Moskura on 4/11/2018.

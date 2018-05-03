@@ -1,6 +1,6 @@
 package TeamCity.dao.impl;
 
-import TeamCity.Models.HistoricalData;
+import TeamCity.models.HistoricalData;
 import TeamCity.dao.HistoricalDataDao;
 import TeamCity.dao.HistoricalDataRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,6 +21,4 @@ public class HistoricalDataImpl implements HistoricalDataDao {
     public List<HistoricalData> getAll() {
         return jdbcTemplate.query(SELECT_QUERY, new HistoricalDataRowMapper());
     }
-
-
 }

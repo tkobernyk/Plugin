@@ -1,4 +1,4 @@
-package TeamCity.Models;
+package TeamCity.models;
 
 import lombok.Data;
 

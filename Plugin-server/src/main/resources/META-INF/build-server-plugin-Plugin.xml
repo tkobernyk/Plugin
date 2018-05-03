@@ -5,10 +5,10 @@
                            http://www.springframework.org/schema/beans/spring-beans.xsd"
        default-autowire="constructor">
     <bean class="TeamCity.UI.Tabs.DeployTab"/>
-    <bean class="TeamCity.Controllers.DeployControllerAction"/>
+    <bean class="TeamCity.controllers.DeployControllerAction"/>
     <bean class="TeamCity.UI.Tabs.SettingsAdminPage"/>
-    <bean class="TeamCity.Controllers.SettingAdminController"/>
-    <bean class="TeamCity.Controllers.MessageListener"/>
-    <bean class="TeamCity.Controllers.DbAccessTest"/>
+    <bean class="TeamCity.controllers.SettingAdminController"/>
+    <bean class="TeamCity.controllers.MessageListener"/>
+    <bean class="TeamCity.controllers.DbAccessTest"/>
     <bean class="TeamCity.powershell.PowerShellFactory"/>
 </beans>

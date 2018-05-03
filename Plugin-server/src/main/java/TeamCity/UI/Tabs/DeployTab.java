@@ -1,7 +1,7 @@
 package TeamCity.UI.Tabs;
 
-import TeamCity.Helpers.PropertyRepository;
-import TeamCity.Models.HelixDeploySettings;
+import TeamCity.helpers.PropertyRepository;
+import TeamCity.models.HelixDeploySettings;
 import jetbrains.buildServer.serverSide.BuildsManager;
 import jetbrains.buildServer.serverSide.SBuild;
 import jetbrains.buildServer.web.openapi.BuildTab;

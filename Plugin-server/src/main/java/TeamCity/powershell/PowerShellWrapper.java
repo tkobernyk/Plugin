@@ -1,23 +1,24 @@
 package TeamCity.powershell;
 
-import TeamCity.Models.Deploy;
+import TeamCity.models.Deploy;
 import lombok.Data;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 
 @Data
-public class PowerShellWrapper implements Callable<DeployStatus> {
+public class PowerShellWrapper implements Supplier<Deploy> {
 
 
-    private DeployStatus deployStatus;
     private BlockingQueue<String> blockingQueue;
     private String scriptPath;
     private Deploy deploy;
     private PowerShellRunner powerShellRunner;
+    private long userId;
+
 
     @Override
-    public DeployStatus call() throws Exception {
-        return  powerShellRunner.run(blockingQueue, scriptPath, deploy.toString());
+    public Deploy get() {
+        return powerShellRunner.run(blockingQueue, scriptPath, deploy);
     }
 }
