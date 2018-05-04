@@ -12,7 +12,11 @@ public class PluginUtils {
 
     public static HistoricalData convertFromDeployToHistoricalData(Deploy deploy, String data) {
         HistoricalData historicalData = new HistoricalData();
-        historicalData.setDeploy(deploy);
+        historicalData.setPhase(deploy.getPhase());
+        historicalData.setBuildId(deploy.getBuildId());
+        historicalData.setEnvironment(deploy.getEnvironment());
+        historicalData.setDeployStatus(deploy.getDeployStatus());
+        historicalData.setProjectName(deploy.getProjectName());
         historicalData.setOutput(convertFromStringToClob(data));
         return historicalData;
     }
