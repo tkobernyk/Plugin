@@ -1,6 +1,5 @@
 package TeamCity.cache;
 
-import TeamCity.models.BlockingQueueWrapper;
 import TeamCity.powershell.PowerShellWrapper;
 import lombok.Getter;
 import lombok.Setter;

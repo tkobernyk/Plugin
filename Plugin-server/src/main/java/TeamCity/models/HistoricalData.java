@@ -12,17 +12,12 @@ import java.time.LocalDateTime;
 public class HistoricalData {
     private Long id;
     private LocalDateTime localDateTime;
-    private Long userId;
     private Clob output;
-    private Environment environment;
-    private String projectName;
-    private String buildId;
-    private String phase;
-    private DeployStatus deployStatus;
+    private Deploy deploy;
 
     public Object[] listOValues() {
-        return new Object[]{getId(), getLocalDateTime(), getUserId(), getOutput(), getEnvironment(),
-                getProjectName(), getBuildId(), getPhase(), getDeployStatus()};
+        return new Object[]{getId(), getLocalDateTime(), deploy.getUserId(), getOutput(), deploy.getEnvironment(),
+                deploy.getProjectName(), deploy.getBuildId(), deploy.getPhase(), deploy.getDeployStatus()};
     }
 
     public int[] listOfTypes() {

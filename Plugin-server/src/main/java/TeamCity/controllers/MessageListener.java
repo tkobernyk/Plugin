@@ -16,7 +16,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.OutputStream;
-import java.util.concurrent.BlockingQueue;
+import java.util.Queue;
 
 
 public class MessageListener extends BaseController {
@@ -44,18 +44,20 @@ public class MessageListener extends BaseController {
             SUser sUser = SessionUser.getUser(request);
             PowerShellWrapper powerShellWrapper = powerShellFactory.
                     getOrCreatePowerShellRunner(deploymentDTO.getDeploy(), sUser, deploymentDTO.getScriptPath(), deploymentDTO.getPathPrefix());
-            outputStream.write(processOutput(powerShellWrapper.getBlockingQueue()).getBytes());
+            String data = processOutput(powerShellWrapper.getQueue());
+            outputStream.write(data.getBytes());
+            powerShellWrapper.getData().append(data);
         } catch (Exception e) {
             Log.error(e.getMessage(), e);
         }
         return null;
     }
 
-    private String processOutput(BlockingQueue<String> blockingQueue) throws InterruptedException {
+    private String processOutput(Queue<String> queue) throws InterruptedException {
         StringBuilder builder = new StringBuilder();
         int i = 0;
-        while (!blockingQueue.isEmpty() && i < 20) {
-            builder.append(blockingQueue.take());
+        while (!queue.isEmpty() && i < 20) {
+            builder.append(queue.poll());
             i++;
         }
         Log.info("get message from queue " + builder.toString());

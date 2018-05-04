@@ -8,6 +8,7 @@ import lombok.Setter;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Predicate;
 
@@ -21,7 +22,7 @@ public class PowerShellRunner {
             && !s.contains("Copyright (C) 2016 Microsoft Corporation. All rights reserved.");
 
     //TODO: rewrite to separate methods
-    public Deploy run(BlockingQueue<String> blockingQueue, String scriptPath, Deploy deploy) {
+    public Deploy run(Queue<String> queue, String scriptPath, Deploy deploy) {
         ProcessBuilder processBuilder = createProcessWindowsOS(scriptPath, deploy.getParametersAsString());
         Process powerShellProcess = null;
         try {
@@ -31,8 +32,8 @@ public class PowerShellRunner {
         }
         deploy.setDeployStatus(DeployStatus.IN_PROGRESS);
         //powerShellProcess.getOutputStream().close();
-        processOutput(powerShellProcess,blockingQueue, deploy);
-        processErrorOutput(powerShellProcess,blockingQueue, deploy);
+        processOutput(powerShellProcess,queue, deploy);
+        processErrorOutput(powerShellProcess,queue, deploy);
         deploy.setDeployStatus(DeployStatus.SUCCESS);
         return deploy;
     }
@@ -48,24 +49,24 @@ public class PowerShellRunner {
         throw new NoSupportedOSException("os.name should be windows");
     }
 
-    private void processOutput(Process powerShellProcess, BlockingQueue<String> blockingQueue, Deploy deploy) {
+    private void processOutput(Process powerShellProcess, Queue<String> queue, Deploy deploy) {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                 powerShellProcess.getInputStream()))) {
             LOGGER.info("PROCESS OUTPUT");
-            bufferedReader.lines().filter(predicate).forEach(line -> addStringToBlockingQueue(blockingQueue, line));
+            bufferedReader.lines().filter(predicate).forEach(line -> addStringToBlockingQueue(queue, line));
         } catch (Exception e) {
             deploy.setDeployStatus(DeployStatus.FAILED);
             LOGGER.error(e.getMessage(), e);
         }
     }
 
-    private void processErrorOutput(Process powerShellProcess, BlockingQueue<String> blockingQueue, Deploy deploy) {
+    private void processErrorOutput(Process powerShellProcess, Queue<String> queue, Deploy deploy) {
         try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(
                 powerShellProcess.getErrorStream()))) {
             if (errorReader.ready()) {
-                blockingQueue.add("<div class='error'>");
-                errorReader.lines().forEach(blockingQueue::add);
-                blockingQueue.add("</div>");
+                queue.add("<div class='error'>");
+                errorReader.lines().forEach(queue::add);
+                queue.add("</div>");
             }
         } catch (Exception e) {
             deploy.setDeployStatus(DeployStatus.FAILED);
@@ -73,8 +74,8 @@ public class PowerShellRunner {
         }
     }
 
-    private boolean addStringToBlockingQueue(BlockingQueue<String> blockingQueue, String line) {
-        return blockingQueue.add(line + (!line.isEmpty() ? " <br />" : ""));
+    private boolean addStringToBlockingQueue(Queue<String> queue, String line) {
+        return queue.add(line + (!line.isEmpty() ? " <br />" : ""));
     }
 
 }

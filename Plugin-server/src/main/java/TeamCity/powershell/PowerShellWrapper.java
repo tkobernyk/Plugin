@@ -3,14 +3,15 @@ package TeamCity.powershell;
 import TeamCity.models.Deploy;
 import lombok.Data;
 
-import java.util.concurrent.BlockingQueue;
+import java.util.Queue;
 import java.util.function.Supplier;
 
 @Data
 public class PowerShellWrapper implements Supplier<Deploy> {
 
 
-    private BlockingQueue<String> blockingQueue;
+    private Queue<String> queue;
+    private StringBuilder data;
     private String scriptPath;
     private Deploy deploy;
     private PowerShellRunner powerShellRunner;
@@ -19,6 +20,6 @@ public class PowerShellWrapper implements Supplier<Deploy> {
 
     @Override
     public Deploy get() {
-        return powerShellRunner.run(blockingQueue, scriptPath, deploy);
+        return powerShellRunner.run(queue, scriptPath, deploy);
     }
 }

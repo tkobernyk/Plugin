@@ -5,6 +5,7 @@ import TeamCity.models.Deploy;
 import TeamCity.models.Environment;
 import TeamCity.powershell.PowerShellFactory;
 import TeamCity.powershell.PowerShellWrapper;
+import TeamCity.util.PluginUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.SBuildServer;
@@ -20,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -56,10 +58,10 @@ public class DeployControllerAction extends BaseController {
         String prefixPath = createRuntimeFolderIfDoesNotExist(httpServletRequest.getServletContext()
                 .getRealPath(descriptor.getPluginResourcesPath("Runtime")));
         PowerShellWrapper powerShellWrapper = powerShellFactory.getOrCreatePowerShellRunner(deploy, sUser, psScriptPath, prefixPath);
-        //CompletableFuture.supplyAsync(powerShellWrapper)
-        // .thenAcceptAsync(d-> Files.delete(Paths.get(powerShellWrapper.getScriptPath())))
-        //  .thenAcceptAsync(d -> historicalDataDao.save(PluginUtils.convertFromDeployToHistoricalData(d, powerShellWrapper.getBlockingQueue())))
-        //  .thenAcceptAsync(d1 -> powerShellFactory.getCacheWrapper().getPowerShellOutputCache().remove());
+        CompletableFuture.supplyAsync(powerShellWrapper)
+                .thenAcceptAsync((Deploy d) -> historicalDataDao.save(PluginUtils.convertFromDeployToHistoricalData(d, powerShellWrapper.getData().toString())))
+                .thenAcceptAsync((Void v) -> powerShellFactory.getCacheWrapper().getPowerShellOutputCache().remove(powerShellWrapper.getDeploy().getFileNameFromDeploy().hashCode()))
+                .thenAcceptAsync((Void v) -> removeFileWithCatchingException(Paths.get(powerShellWrapper.getScriptPath())));
         return null;
     }
 
@@ -79,10 +81,18 @@ public class DeployControllerAction extends BaseController {
             try {
                 Files.createDirectory(Paths.get(path));
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.error(e.getMessage(), e);
             }
         }
         return path;
+    }
+
+    private void removeFileWithCatchingException(Path path) {
+        try {
+            Files.delete(path);
+        } catch (IOException e) {
+            Log.error(e.getMessage(), e);
+        }
     }
 
 }

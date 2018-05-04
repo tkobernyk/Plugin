@@ -9,7 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.ArrayDeque;
 
 @Getter
 public class PowerShellFactory {
@@ -28,7 +28,7 @@ public class PowerShellFactory {
         Files.copy(Paths.get(scriptPath), new FileOutputStream(pathPrefix + "/" + deploy.getFileNameFromDeploy()));
         PowerShellWrapper powerShellWrapper = new PowerShellWrapper();
         powerShellWrapper.setDeploy(deploy);
-        powerShellWrapper.setBlockingQueue(new LinkedBlockingQueue<>());
+        powerShellWrapper.setQueue(new ArrayDeque<>());
         powerShellWrapper.setPowerShellRunner(new PowerShellRunner());
         powerShellWrapper.setScriptPath(pathPrefix + deploy.getFileNameFromDeploy());
         powerShellWrapper.setUserId(sUser.getId());
