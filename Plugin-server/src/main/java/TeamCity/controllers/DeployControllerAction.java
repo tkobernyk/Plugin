@@ -67,6 +67,7 @@ public class DeployControllerAction extends BaseController {
 
     //TODO be careful for adding to javascript values from enum
     private Deploy getDeploy(HttpServletRequest request) {
+        Log.info("AAAA ____AAAAA -----.>>> " + request.getParameter("Environment"));
         Deploy deploy = new Deploy();
         deploy.setBuildId(request.getParameter("BuildId"));
         deploy.setProjectName(request.getParameter("ProjectName"));

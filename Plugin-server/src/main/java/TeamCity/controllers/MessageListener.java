@@ -1,6 +1,7 @@
 package TeamCity.controllers;
 
-import TeamCity.dto.DeploymentDTO;
+import TeamCity.models.Deploy;
+import TeamCity.models.Environment;
 import TeamCity.powershell.PowerShellFactory;
 import TeamCity.powershell.PowerShellWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,10 +41,10 @@ public class MessageListener extends BaseController {
     protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) {
         try (OutputStream outputStream = response.getOutputStream()) {
             Log.info("INSIDE MESSAGE TRIGGER");
-            DeploymentDTO deploymentDTO = objectMapper.readValue(request.getReader(), DeploymentDTO.class);
+            Deploy deploy = getDeploy(request);
             SUser sUser = SessionUser.getUser(request);
             PowerShellWrapper powerShellWrapper = powerShellFactory.
-                    getOrCreatePowerShellRunner(deploymentDTO.getDeploy(), sUser, deploymentDTO.getScriptPath(), deploymentDTO.getPathPrefix());
+                    getOrCreatePowerShellRunner(deploy, sUser, null, null);
             String data = processOutput(powerShellWrapper.getQueue());
             outputStream.write(data.getBytes());
             powerShellWrapper.getData().append(data);
@@ -63,5 +64,16 @@ public class MessageListener extends BaseController {
         Log.info("get message from queue " + builder.toString());
         return builder.toString();
     }
+
+    private Deploy getDeploy(HttpServletRequest request) {
+        Deploy deploy = new Deploy();
+        deploy.setBuildId(request.getParameter("BuildId"));
+        deploy.setProjectName(request.getParameter("ProjectName"));
+        deploy.setEnvironment(Environment.valueOf(request.getParameter("Environment")));
+        deploy.setPhase(request.getParameter("Phase"));
+        Log.info("Deploy: " + deploy.toString());
+        return deploy;
+    }
+
 
 }

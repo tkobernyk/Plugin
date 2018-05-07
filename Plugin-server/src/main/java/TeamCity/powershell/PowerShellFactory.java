@@ -16,6 +16,10 @@ public class PowerShellFactory {
 
     private CacheWrapper cacheWrapper;
 
+    public PowerShellFactory(CacheWrapper cacheWrapper){
+        this.cacheWrapper = cacheWrapper;
+    }
+
     public PowerShellWrapper getOrCreatePowerShellRunner(Deploy deploy, SUser sUser, String scriptPath, String pathPrefix) throws IOException {
 
         if (cacheWrapper.getPowerShellOutputCache().get(deploy.getFileNameFromDeploy().hashCode()) != null) {

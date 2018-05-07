@@ -23,23 +23,11 @@
     </tr>
     <tr>
         <td style="padding: 5px" class="col-xs-6" colspan="2">
-            <select id="environment" class="selectpicker form-control">
-                <optgroup label="Enviroment">
-                    <c:if test="${not empty environments}">
-                        <c:forEach var="environment" items="${environments}">
-                            <option value="${environment}">${environment}</option>
-                         </c:forEach>
-                    </c:if>
-                </optgroup>
-            </select>
-        </td>
-    </tr>
-    <tr>
-        <td style="padding: 5px" class="col-xs-6" colspan="2">
             <input type="button" ${status} class="btn btn-default" id="btnDeploy" value="deploy" />
         </td>
     </tr>
 </table>
+<input type="hidden" id="environment" value="${environment}"/>
 <div id="output">
 
 </div>
@@ -49,10 +37,9 @@ jQuery( document ).ready(function() {
     var data = {
          BuildId: jQuery('#buildId').text(),
          ProjectName: jQuery('#projectName').text(),
-         Environment: jQuery('#environment option:selected').text(),
+         Environment: jQuery('#environment').val(),
          Phase: jQuery('#Phase').text()
      }
-
     jQuery("#btnDeploy").on("click", function(event) {
         triggerMessage();
         BS.ajaxRequest(window['base_uri'] + '/deploy/run.html', {
@@ -68,11 +55,18 @@ jQuery( document ).ready(function() {
 </script>
 <script type="text/javascript">
 function triggerMessage(){
+var data = {
+         BuildId: jQuery('#buildId').text(),
+         ProjectName: jQuery('#projectName').text(),
+         Environment: jQuery('#environment').val(),
+         Phase: jQuery('#Phase').text()
+     }
     var poller = BS.periodicalExecutor(function () {
     var result = $j.Deferred();
     console.log("triggerMessage()");
     BS.ajaxRequest(window['base_uri'] + '/messages/getMessage.html', {
       method: 'post',
+      parameters: jQuery.param(data),
       onComplete: function (response) {
          console.log("/messages/getMessage.html:onComplete()");
          if(response.responseText !== "")
@@ -95,5 +89,4 @@ function triggerMessage(){
     }, BS.internalProperty('teamcity.ui.pollInterval') * 250);
     poller.start();
 }
-
 </script>

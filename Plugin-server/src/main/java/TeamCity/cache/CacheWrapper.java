@@ -22,7 +22,7 @@ public class CacheWrapper {
         cacheManager = CacheManagerBuilder.newCacheManagerBuilder().build();
         cacheManager.init();
         cache = cacheManager.createCache(POWER_SHELL_OUTPUT_CACHE,
-                CacheConfigurationBuilder.newCacheConfigurationBuilder(Integer.class, PowerShellWrapper.class, ResourcePoolsBuilder.newResourcePoolsBuilder()));
+                CacheConfigurationBuilder.newCacheConfigurationBuilder(Integer.class, PowerShellWrapper.class, ResourcePoolsBuilder.heap(10).build()));
     }
 
     public Cache<Integer, PowerShellWrapper> getPowerShellOutputCache() {
