@@ -14,28 +14,35 @@ import java.util.ArrayDeque;
 @Getter
 public class PowerShellFactory {
 
+    private static final com.intellij.openapi.diagnostic.Logger LOGGER =
+            com.intellij.openapi.diagnostic.Logger.getInstance(PowerShellFactory.class.getName());
+
     private CacheWrapper cacheWrapper;
 
-    public PowerShellFactory(CacheWrapper cacheWrapper){
+    public PowerShellFactory(CacheWrapper cacheWrapper) {
         this.cacheWrapper = cacheWrapper;
     }
 
     public PowerShellWrapper getOrCreatePowerShellRunner(Deploy deploy, SUser sUser, String scriptPath, String pathPrefix) throws IOException {
 
         if (cacheWrapper.getPowerShellOutputCache().get(deploy.getFileNameFromDeploy().hashCode()) != null) {
+            LOGGER.info("*****--------------Getting from cache");
             return cacheWrapper.getPowerShellOutputCache().get(deploy.getFileNameFromDeploy().hashCode());
         }
         return createPowerShellRunner(deploy, sUser, scriptPath, pathPrefix);
     }
 
     private PowerShellWrapper createPowerShellRunner(Deploy deploy, SUser sUser, String scriptPath, String pathPrefix) throws IOException {
-        Files.copy(Paths.get(scriptPath), new FileOutputStream(pathPrefix + "/" + deploy.getFileNameFromDeploy()));
+        LOGGER.info("*****--------------Creating new one");
+        String path = pathPrefix + "\\" + deploy.getFileNameFromDeploy();
+        Files.copy(Paths.get(scriptPath), new FileOutputStream(path));
         PowerShellWrapper powerShellWrapper = new PowerShellWrapper();
+        deploy.setUserId(sUser.getId());
         powerShellWrapper.setDeploy(deploy);
         powerShellWrapper.setQueue(new ArrayDeque<>());
+        powerShellWrapper.setData(new StringBuilder());
         powerShellWrapper.setPowerShellRunner(new PowerShellRunner());
-        powerShellWrapper.setScriptPath(pathPrefix + deploy.getFileNameFromDeploy());
-        powerShellWrapper.setUserId(sUser.getId());
+        powerShellWrapper.setScriptPath(path);
         cacheWrapper.getPowerShellOutputCache().put(deploy.getFileNameFromDeploy().hashCode(), powerShellWrapper);
         return powerShellWrapper;
     }

@@ -24,6 +24,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class DeployControllerAction extends BaseController {
@@ -31,6 +34,7 @@ public class DeployControllerAction extends BaseController {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final PowerShellFactory powerShellFactory;
     private final HistoricalDataDao historicalDataDao;
+    ExecutorService executorService = Executors.newFixedThreadPool(20);
     private static final com.intellij.openapi.diagnostic.Logger Log =
             com.intellij.openapi.diagnostic.Logger.getInstance(DeployControllerAction.class.getName());
 
@@ -57,11 +61,15 @@ public class DeployControllerAction extends BaseController {
         Deploy deploy = getDeploy(httpServletRequest);
         String prefixPath = createRuntimeFolderIfDoesNotExist(httpServletRequest.getServletContext()
                 .getRealPath(descriptor.getPluginResourcesPath("Runtime")));
+        Log.info("PRefix path " + prefixPath);
         PowerShellWrapper powerShellWrapper = powerShellFactory.getOrCreatePowerShellRunner(deploy, sUser, psScriptPath, prefixPath);
+
         CompletableFuture.supplyAsync(powerShellWrapper)
                 .thenAcceptAsync((Deploy d) -> historicalDataDao.save(PluginUtils.convertFromDeployToHistoricalData(d, powerShellWrapper.getData().toString())))
                 .thenAcceptAsync((Void v) -> powerShellFactory.getCacheWrapper().getPowerShellOutputCache().remove(powerShellWrapper.getDeploy().getFileNameFromDeploy().hashCode()))
+                //TODO: powerShellFactory.removePowerShellWrapper(powerShellWrapper);
                 .thenAcceptAsync((Void v) -> removeFileWithCatchingException(Paths.get(powerShellWrapper.getScriptPath())));
+                //TODO: Move removeFileWithCatchingException to removePSWrapper method.
         return null;
     }
 

@@ -9,7 +9,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
 import java.util.function.Predicate;
 
 @Getter
@@ -19,7 +18,7 @@ public class PowerShellRunner {
             com.intellij.openapi.diagnostic.Logger.getInstance(PowerShellRunner.class.getName());
 
     private static Predicate<String> predicate = s -> !s.contains("Windows PowerShell")
-            && !s.contains("Copyright (C) 2016 Microsoft Corporation. All rights reserved.");
+            && !s.contains("Copyright (C) 2016 Microsoft Corporation. All rights reserved.") && !s.isEmpty();
 
     //TODO: rewrite to separate methods
     public Deploy run(Queue<String> queue, String scriptPath, Deploy deploy) {
@@ -32,9 +31,10 @@ public class PowerShellRunner {
         }
         deploy.setDeployStatus(DeployStatus.IN_PROGRESS);
         //powerShellProcess.getOutputStream().close();
-        processOutput(powerShellProcess,queue, deploy);
-        processErrorOutput(powerShellProcess,queue, deploy);
+        processOutput(powerShellProcess, queue, deploy);
+        processErrorOutput(powerShellProcess, queue, deploy);
         deploy.setDeployStatus(DeployStatus.SUCCESS);
+        LOGGER.info("FINISHED PROCESSING RUN METHOD");
         return deploy;
     }
 
@@ -54,6 +54,7 @@ public class PowerShellRunner {
                 powerShellProcess.getInputStream()))) {
             LOGGER.info("PROCESS OUTPUT");
             bufferedReader.lines().filter(predicate).forEach(line -> addStringToBlockingQueue(queue, line));
+            LOGGER.info("FINISHED OUTPUT");
         } catch (Exception e) {
             deploy.setDeployStatus(DeployStatus.FAILED);
             LOGGER.error(e.getMessage(), e);
@@ -75,7 +76,7 @@ public class PowerShellRunner {
     }
 
     private boolean addStringToBlockingQueue(Queue<String> queue, String line) {
-        return queue.add(line + (!line.isEmpty() ? " <br />" : ""));
+        return  queue.add(line + (!line.isEmpty() ? " <br />" : ""));
     }
 
 }

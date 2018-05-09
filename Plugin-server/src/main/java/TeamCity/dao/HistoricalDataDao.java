@@ -7,7 +7,6 @@ import java.util.List;
 
 public interface HistoricalDataDao {
 
-    //TODO provide Right query to select
     String SELECT_QUERY = "SELECT [Id]\n" +
             "      ,[BuildId]\n" +
             "      ,[ProjectName]\n" +
@@ -19,8 +18,8 @@ public interface HistoricalDataDao {
             "      ,[UserId]\n" +
             "  FROM [TeamCity].[dbo].[historical_deployment_data]";
 
-    //TODO provide Right query to insert
-    String INSERT_QUERY = "";
+    String INSERT_QUERY = "INSERT INTO [TeamCity].[dbo].[historical_deployment_data]([BuildId],[ProjectName],[Environment],[Phase]," +
+            "[DeployStatus],[DeployOutput],[UserId]) values(?,?,?,?,?,?,?)";
 
     int save(HistoricalData historicalData);
 

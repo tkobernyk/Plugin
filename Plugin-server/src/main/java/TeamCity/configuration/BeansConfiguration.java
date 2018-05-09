@@ -63,8 +63,9 @@ public class BeansConfiguration {
     @Bean
     public MessageListener messageListener(@NotNull SBuildServer server,
                                            @NotNull WebControllerManager webControllerManager,
-                                           @NotNull PowerShellFactory powerShellFactory) {
-        return new MessageListener(server, webControllerManager, powerShellFactory);
+                                           @NotNull PowerShellFactory powerShellFactory,
+                                           @NotNull PluginDescriptor pluginDescriptor) {
+        return new MessageListener(server, webControllerManager, powerShellFactory, pluginDescriptor);
     }
 
     @Bean

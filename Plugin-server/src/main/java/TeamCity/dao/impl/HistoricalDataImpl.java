@@ -9,7 +9,8 @@ import java.util.List;
 
 
 public class HistoricalDataImpl implements HistoricalDataDao {
-
+    private static final com.intellij.openapi.diagnostic.Logger Log =
+            com.intellij.openapi.diagnostic.Logger.getInstance(HistoricalDataImpl.class.getName());
     private JdbcTemplate jdbcTemplate;
 
     public HistoricalDataImpl(JdbcTemplate jdbcTemplate) {
@@ -18,7 +19,14 @@ public class HistoricalDataImpl implements HistoricalDataDao {
 
     @Override
     public int save(HistoricalData historicalData) {
-        return jdbcTemplate.update(INSERT_QUERY, historicalData.listOValues(), historicalData.listOfTypes());
+        Log.info("SAVING HISTORICAL DATA " + historicalData);
+        int a = 0;
+        try {
+             a = jdbcTemplate.update(INSERT_QUERY, historicalData.listOValues(), historicalData.listOfTypes());
+        } catch (Exception e) {
+            Log.error(e.getMessage(), e);
+        }
+        return a;
     }
 
     @Override

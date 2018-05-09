@@ -20,13 +20,12 @@ public class HistoricalData {
     private String phase;
     private DeployStatus deployStatus;
 
+
     public Object[] listOValues() {
-        return new Object[]{getId(), getLocalDateTime(), getUserId(), getOutput(), getEnvironment(),
-                getProjectName(), getBuildId(), getPhase(), getDeployStatus()};
+        return new Object[]{getBuildId(), getProjectName(), getEnvironment(), getPhase(), getDeployStatus(), getOutput(), getUserId()};
     }
 
     public int[] listOfTypes() {
-        return new int[]{Types.BIGINT, Types.TIMESTAMP, Types.BIGINT, Types.BLOB, Types.NVARCHAR,
-                Types.NVARCHAR, Types.INTEGER, Types.NVARCHAR, Types.NVARCHAR};
+        return new int[]{Types.BIGINT, Types.NVARCHAR, Types.NVARCHAR, Types.NVARCHAR, Types.NVARCHAR, Types.CLOB, Types.BIGINT};
     }
 }

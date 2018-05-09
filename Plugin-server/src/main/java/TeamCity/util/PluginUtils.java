@@ -9,14 +9,18 @@ import java.sql.Clob;
 import java.sql.SQLException;
 
 public class PluginUtils {
+    private static final com.intellij.openapi.diagnostic.Logger Log =
+            com.intellij.openapi.diagnostic.Logger.getInstance(PluginUtils.class.getName());
 
     public static HistoricalData convertFromDeployToHistoricalData(Deploy deploy, String data) {
+        Log.info("INSIDE PLUGINUTILS CONVERT TO HDATA");
         HistoricalData historicalData = new HistoricalData();
         historicalData.setPhase(deploy.getPhase());
         historicalData.setBuildId(deploy.getBuildId());
         historicalData.setEnvironment(deploy.getEnvironment());
         historicalData.setDeployStatus(deploy.getDeployStatus());
         historicalData.setProjectName(deploy.getProjectName());
+        historicalData.setUserId(deploy.getUserId());
         historicalData.setOutput(convertFromStringToClob(data));
         return historicalData;
     }
