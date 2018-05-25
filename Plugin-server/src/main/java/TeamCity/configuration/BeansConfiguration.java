@@ -9,6 +9,8 @@ import TeamCity.controllers.SettingAdminController;
 import TeamCity.dao.HistoricalDataDao;
 import TeamCity.dao.impl.HistoricalDataImpl;
 import TeamCity.powershell.PowerShellFactory;
+import TeamCity.powershell.PowerShellRunner;
+import TeamCity.powershell.process.ProcessFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jetbrains.buildServer.serverSide.BuildsManager;
@@ -76,7 +78,7 @@ public class BeansConfiguration {
 
     @Bean
     PowerShellFactory powerShellFactory() {
-        return new PowerShellFactory(cacheWrapper());
+        return new PowerShellFactory(cacheWrapper(), powerShellRunner());
     }
 
     @Bean
@@ -91,6 +93,17 @@ public class BeansConfiguration {
         return new CacheWrapper();
     }
 
+    @Bean
+    public ProcessFactory processFactory() {
+        return new ProcessFactory(cacheWrapper());
+    }
+
+    @Bean
+    public PowerShellRunner powerShellRunner() {
+        return new PowerShellRunner(processFactory());
+    }
+
+    //TODO: take from settings file
     @Bean
     public DataSource dataSource() {
         HikariConfig hikariConfig = new HikariConfig();

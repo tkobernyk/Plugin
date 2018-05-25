@@ -38,7 +38,8 @@ jQuery( document ).ready(function() {
          BuildId: jQuery('#buildId').text(),
          ProjectName: jQuery('#projectName').text(),
          Environment: jQuery('#environment').val(),
-         Phase: jQuery('#Phase').text()
+         Phase: jQuery('#Phase').text(),
+         EnabledDeploy: 'true'
      }
     jQuery("#btnDeploy").on("click", function(event) {
         triggerMessage();
@@ -73,6 +74,9 @@ var data = {
          {
             jQuery("#output").append("<div>" + response.responseText + "</div>");
             jQuery("html, body").animate({ scrollTop: jQuery(document).height() }, 1000);
+         }
+         if(response.responseText=="DONE"){
+           poller.stop();
          }
          if (response && response.status != 200) {
            BS.ServerLink.waitUntilServerIsAvailable(BS.SubscriptionManager.start);

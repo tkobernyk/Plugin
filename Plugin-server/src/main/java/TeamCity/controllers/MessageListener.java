@@ -43,8 +43,8 @@ public class MessageListener extends BaseController {
 
     @Nullable
     @Override
-    protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) {
-        //Log.info("INSIDE MESSAGE TRIGGER");
+    protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws InterruptedException {
+        //Thread.sleep(100000);
         Deploy deploy = getDeploy(request);
         SUser sUser = SessionUser.getUser(request);
         try (OutputStream outputStream = response.getOutputStream()) {
@@ -66,7 +66,6 @@ public class MessageListener extends BaseController {
             builder.append(queue.poll());
             i++;
         }
-        // Log.info("get message from queue " + builder.toString());
         return builder.toString();
     }
 

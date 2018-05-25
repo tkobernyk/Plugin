@@ -13,6 +13,7 @@ public class Deploy {
     private String phase;
     private DeployStatus deployStatus;
     private long userId;
+    private boolean enabledDeploy;
 
     public String getFileNameFromDeploy() {
         return projectName + DELIMITER + phase + DELIMITER + environment + DELIMITER + buildId + POWER_SHELL_EXTENSION;

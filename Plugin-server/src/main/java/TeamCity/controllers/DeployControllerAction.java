@@ -65,10 +65,10 @@ public class DeployControllerAction extends BaseController {
         PowerShellWrapper powerShellWrapper = powerShellFactory.getOrCreatePowerShellRunner(deploy, sUser, psScriptPath, prefixPath);
 
         CompletableFuture.supplyAsync(powerShellWrapper)
-                .thenAcceptAsync((Deploy d) -> historicalDataDao.save(PluginUtils.convertFromDeployToHistoricalData(d, powerShellWrapper.getData().toString())))
-                .thenAcceptAsync((Void v) -> powerShellFactory.getCacheWrapper().getPowerShellOutputCache().remove(powerShellWrapper.getDeploy().getFileNameFromDeploy().hashCode()))
+                .thenAcceptAsync((Deploy d) -> removeFileWithCatchingException(Paths.get(powerShellWrapper.getScriptPath())))
+                .thenAcceptAsync((Void v) -> historicalDataDao.save(PluginUtils.convertFromDeployToHistoricalData(powerShellWrapper.getDeploy(), powerShellWrapper.getData().toString())))
+                .thenAcceptAsync((deploy1) -> powerShellFactory.getCacheWrapper().getPowerShellOutputCache().remove(powerShellWrapper.getDeploy().getFileNameFromDeploy().hashCode()));
                 //TODO: powerShellFactory.removePowerShellWrapper(powerShellWrapper);
-                .thenAcceptAsync((Void v) -> removeFileWithCatchingException(Paths.get(powerShellWrapper.getScriptPath())));
                 //TODO: Move removeFileWithCatchingException to removePSWrapper method.
         return null;
     }
@@ -81,6 +81,7 @@ public class DeployControllerAction extends BaseController {
         deploy.setProjectName(request.getParameter("ProjectName"));
         deploy.setEnvironment(Environment.valueOf(request.getParameter("Environment")));
         deploy.setPhase(request.getParameter("Phase"));
+        deploy.setEnabledDeploy(Boolean.valueOf(request.getParameter("EnabledDeploy")));
         Log.info("Deploy: " + deploy.toString());
         return deploy;
     }

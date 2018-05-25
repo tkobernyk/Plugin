@@ -7,6 +7,7 @@ Write-Host "buildId: $buildId"
 Write-Host "Delay: 3000"
 Start-Sleep -Milliseconds 3000
 Write-Host "environment: $environment"
+Write-Host "FINISHED"
 Switch($projectName)
 {
     "eSignal.ETF" { $projectFolder = "esignaletf"; break}

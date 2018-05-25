@@ -1,14 +1,13 @@
 package TeamCity.powershell;
 
-import TeamCity.exception.NoSupportedOSException;
 import TeamCity.models.Deploy;
+import TeamCity.powershell.process.ProcessFactory;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.function.Predicate;
 
 @Getter
@@ -17,66 +16,55 @@ public class PowerShellRunner {
     private static final com.intellij.openapi.diagnostic.Logger LOGGER =
             com.intellij.openapi.diagnostic.Logger.getInstance(PowerShellRunner.class.getName());
 
+
+    private ProcessFactory processFactory;
+
+
+    public PowerShellRunner(ProcessFactory processFactory) {
+        this.processFactory = processFactory;
+    }
+
     private static Predicate<String> predicate = s -> !s.contains("Windows PowerShell")
             && !s.contains("Copyright (C) 2016 Microsoft Corporation. All rights reserved.") && !s.isEmpty();
 
     //TODO: rewrite to separate methods
-    public Deploy run(Queue<String> queue, String scriptPath, Deploy deploy) {
-        ProcessBuilder processBuilder = createProcessWindowsOS(scriptPath, deploy.getParametersAsString());
-        Process powerShellProcess = null;
-        try {
-            powerShellProcess = processBuilder.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public Deploy run(BlockingQueue<String> queue, String scriptPath, Deploy deploy) {
+        LOGGER.info("CURRENT THREAD PowerShellRunner " + Thread.currentThread().getId());
+        Process powerShellProcess = processFactory.getOrCreateProcess(deploy.getFileNameFromDeploy(), scriptPath, deploy.getParametersAsString());
+        LOGGER.info("Procces object " + powerShellProcess);
+        LOGGER.info("PROCCESS " + powerShellProcess);
         deploy.setDeployStatus(DeployStatus.IN_PROGRESS);
-        //powerShellProcess.getOutputStream().close();
         processOutput(powerShellProcess, queue, deploy);
-        processErrorOutput(powerShellProcess, queue, deploy);
         deploy.setDeployStatus(DeployStatus.SUCCESS);
+        LOGGER.info("Deploy Status " + "SUCCESS");
+        processFactory.getCacheWrapper().getJavaProccessCache().remove(deploy.getFileNameFromDeploy().hashCode());
+        powerShellProcess.destroy();
         LOGGER.info("FINISHED PROCESSING RUN METHOD");
         return deploy;
     }
 
-    private ProcessBuilder createProcessWindowsOS(String scriptPath, String params) {
-        LOGGER.info("OS NAME " + System.getProperty("os.name"));
-        if (System.getProperty("os.name").toLowerCase().contains("win")) {
-            String powerShellExecutable = "powershell.exe";
-            LOGGER.info("SCRIPT PATH = " + scriptPath);
-            return new ProcessBuilder(powerShellExecutable,
-                    "-ExecutionPolicy", "Bypass", "-NoExit", "-File", scriptPath, params);
-        }
-        throw new NoSupportedOSException("os.name should be windows");
-    }
 
-    private void processOutput(Process powerShellProcess, Queue<String> queue, Deploy deploy) {
+    private void processOutput(Process powerShellProcess, BlockingQueue<String> queue, Deploy deploy) {
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
                 powerShellProcess.getInputStream()))) {
             LOGGER.info("PROCESS OUTPUT");
-            bufferedReader.lines().filter(predicate).forEach(line -> addStringToBlockingQueue(queue, line));
-            LOGGER.info("FINISHED OUTPUT");
-        } catch (Exception e) {
-            deploy.setDeployStatus(DeployStatus.FAILED);
-            LOGGER.error(e.getMessage(), e);
-        }
-    }
-
-    private void processErrorOutput(Process powerShellProcess, Queue<String> queue, Deploy deploy) {
-        try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(
-                powerShellProcess.getErrorStream()))) {
-            if (errorReader.ready()) {
-                queue.add("<div class='error'>");
-                errorReader.lines().forEach(queue::add);
-                queue.add("</div>");
+            LOGGER.info("QUEUE " + queue.hashCode());
+            String line;
+            while (!((line = bufferedReader.readLine()).contains("FINISHED"))) {
+                addStringToBlockingQueue(queue, line);
             }
+            LOGGER.info("FINISHED OUTPUT");
+
         } catch (Exception e) {
             deploy.setDeployStatus(DeployStatus.FAILED);
             LOGGER.error(e.getMessage(), e);
         }
+
+
     }
 
-    private boolean addStringToBlockingQueue(Queue<String> queue, String line) {
-        return  queue.add(line + (!line.isEmpty() ? " <br />" : ""));
+    private boolean addStringToBlockingQueue(BlockingQueue<String> queue, String line) {
+        return queue.add(line + (!line.isEmpty() ? " <br />" : ""));
     }
 
 }
