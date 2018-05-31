@@ -9,5 +9,4 @@
        default-autowire="constructor">
 
     <context:component-scan base-package="TeamCity"/>
-
 </beans>

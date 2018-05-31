@@ -18,15 +18,13 @@ public class HistoricalDataImpl implements HistoricalDataDao {
     }
 
     @Override
-    public int save(HistoricalData historicalData) {
-        Log.info("SAVING HISTORICAL DATA " + historicalData);
-        int a = 0;
+    public HistoricalData save(HistoricalData historicalData) {
         try {
-             a = jdbcTemplate.update(INSERT_QUERY, historicalData.listOValues(), historicalData.listOfTypes());
+            jdbcTemplate.update(INSERT_QUERY, historicalData.listOValues(), historicalData.listOfTypes());
         } catch (Exception e) {
             Log.error(e.getMessage(), e);
         }
-        return a;
+        return historicalData;
     }
 
     @Override

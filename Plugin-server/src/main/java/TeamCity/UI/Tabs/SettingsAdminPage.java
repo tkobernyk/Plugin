@@ -16,7 +16,7 @@ import java.util.Map;
 
 
 public class SettingsAdminPage extends AdminPage implements CustomTab {
-    private final PluginDescriptor _descriptor;
+    private final PluginDescriptor descriptor;
 
     public SettingsAdminPage(@NotNull PagePlaces pagePlaces,
                              @NotNull PluginDescriptor descriptor) {
@@ -26,7 +26,7 @@ public class SettingsAdminPage extends AdminPage implements CustomTab {
         setTabTitle("Helix Deploy Settings");
         setPosition(PositionConstraint.last());
         register();
-        _descriptor = descriptor;
+        this.descriptor = descriptor;
     }
 
     @NotNull
@@ -37,7 +37,7 @@ public class SettingsAdminPage extends AdminPage implements CustomTab {
 
     @Override
     public void fillModel(@NotNull Map<String, Object> model, @NotNull HttpServletRequest request) {
-        PropertyRepository repository = new PropertyRepository(request.getServletContext(), _descriptor.getPluginResourcesPath("settings.properties"));
+        PropertyRepository repository = new PropertyRepository(request.getServletContext(), descriptor.getPluginResourcesPath("settings.properties"));
         HelixDeploySettings settings = new HelixDeploySettings();
         try {
             settings.setPowerShellScriptPath(repository.getProperties().getProperty("powershellpath", "{teamcityPluginResourcesPath}/PSScript/Deploy.ps1"));

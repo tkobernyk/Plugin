@@ -35,8 +35,6 @@ public class SettingAdminController extends BaseController {
     @Nullable
     @Override
     protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws Exception {
-        Log.info("name " + request.getParameter(""));
-        Log.info("PATH : " + Paths.get(request.getServletContext().getRealPath(pluginDescriptor.getPluginResourcesPath("settings.properties"))));
         Path path = Paths.get(request.getServletContext().getRealPath(pluginDescriptor.getPluginResourcesPath("settings.properties")));
         saveHelixDeploySettings(request.getInputStream(), path);
         return null;
@@ -44,11 +42,10 @@ public class SettingAdminController extends BaseController {
 
 
     private void saveHelixDeploySettings(InputStream inputStream, Path path) {
-        Log.info("Helix Deploy Path " + path.toString());
         try {
             Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            Log.error("Logger " + e.getMessage());
+            Log.error(e.getMessage(), e);
         }
     }
 }

@@ -1,8 +1,5 @@
 package TeamCity.helpers;
 
-/**
- * Created by Mykhailo_Moskura on 4/11/2018.
- */
 
 import jetbrains.buildServer.util.PropertiesUtil;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +10,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 
-//("/buildServerResources/setting.properties")
 public class PropertyRepository {
     private static final com.intellij.openapi.diagnostic.Logger Log =
             com.intellij.openapi.diagnostic.Logger.getInstance(PropertyRepository.class.getName());

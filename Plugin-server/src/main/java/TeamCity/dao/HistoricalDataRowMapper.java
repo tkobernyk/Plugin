@@ -1,6 +1,5 @@
 package TeamCity.dao;
 
-import TeamCity.models.Deploy;
 import TeamCity.models.Environment;
 import TeamCity.models.HistoricalData;
 import TeamCity.powershell.DeployStatus;

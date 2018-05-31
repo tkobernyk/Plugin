@@ -21,7 +21,7 @@ public interface HistoricalDataDao {
     String INSERT_QUERY = "INSERT INTO [TeamCity].[dbo].[historical_deployment_data]([BuildId],[ProjectName],[Environment],[Phase]," +
             "[DeployStatus],[DeployOutput],[UserId]) values(?,?,?,?,?,?,?)";
 
-    int save(HistoricalData historicalData);
+    HistoricalData save(HistoricalData historicalData);
 
     List<HistoricalData> getAll();
 }

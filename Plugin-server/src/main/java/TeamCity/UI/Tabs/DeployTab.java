@@ -33,7 +33,6 @@ public abstract class DeployTab extends BuildTab {
         String phase = sBuild.getBuildTypeName();
         phase = phase.substring(phase.indexOf(':') + 1, phase.indexOf('-'));
         Boolean isSuccessful = sBuild.getBuildStatus().isSuccessful();
-        Log.info("TABBBBBBBBBBBBBBBBBBB ->>> "  + super.getTabId());
         map.put("environment", super.getTabId());
         map.put("status", isSuccessful ? "" : "disabled=''");
         map.put("buildId", sBuild.getBuildId());

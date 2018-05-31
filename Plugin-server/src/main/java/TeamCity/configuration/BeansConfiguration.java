@@ -2,7 +2,6 @@ package TeamCity.configuration;
 
 import TeamCity.UI.Tabs.*;
 import TeamCity.cache.CacheWrapper;
-import TeamCity.controllers.DbAccessTest;
 import TeamCity.controllers.DeployControllerAction;
 import TeamCity.controllers.MessageListener;
 import TeamCity.controllers.SettingAdminController;
@@ -11,6 +10,8 @@ import TeamCity.dao.impl.HistoricalDataImpl;
 import TeamCity.powershell.PowerShellFactory;
 import TeamCity.powershell.PowerShellRunner;
 import TeamCity.powershell.process.ProcessFactory;
+import TeamCity.service.DeployService;
+import TeamCity.service.MessageService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import jetbrains.buildServer.serverSide.BuildsManager;
@@ -64,17 +65,10 @@ public class BeansConfiguration {
 
     @Bean
     public MessageListener messageListener(@NotNull SBuildServer server,
-                                           @NotNull WebControllerManager webControllerManager,
-                                           @NotNull PowerShellFactory powerShellFactory,
-                                           @NotNull PluginDescriptor pluginDescriptor) {
-        return new MessageListener(server, webControllerManager, powerShellFactory, pluginDescriptor);
+                                           @NotNull WebControllerManager webControllerManager) {
+        return new MessageListener(server, webControllerManager, messageService());
     }
 
-    @Bean
-    public DbAccessTest dbAccessTest(@NotNull SBuildServer server,
-                                     @NotNull WebControllerManager webControllerManager) {
-        return new DbAccessTest(server, webControllerManager);
-    }
 
     @Bean
     PowerShellFactory powerShellFactory() {
@@ -85,7 +79,7 @@ public class BeansConfiguration {
     DeployControllerAction deployControllerAction(@NotNull SBuildServer server,
                                                   @NotNull WebControllerManager webControllerManager,
                                                   @NotNull PluginDescriptor descriptor) {
-        return new DeployControllerAction(server, webControllerManager, descriptor, powerShellFactory(), historicalDataDao());
+        return new DeployControllerAction(server, webControllerManager, descriptor, deployService());
     }
 
     @Bean
@@ -103,7 +97,6 @@ public class BeansConfiguration {
         return new PowerShellRunner(processFactory());
     }
 
-    //TODO: take from settings file
     @Bean
     public DataSource dataSource() {
         HikariConfig hikariConfig = new HikariConfig();
@@ -121,10 +114,9 @@ public class BeansConfiguration {
         hikariConfig.addDataSourceProperty("dataSource.prepStmtCacheSqlLimit", "2048");
         hikariConfig.addDataSourceProperty("dataSource.useServerPrepStmts", "true");
 
-        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
-
-        return dataSource;
+        return new HikariDataSource(hikariConfig);
     }
+
 
     @Bean
     public JdbcTemplate jdbcTemplate() {
@@ -136,5 +128,14 @@ public class BeansConfiguration {
         return new HistoricalDataImpl(jdbcTemplate());
     }
 
+    @Bean
+    public DeployService deployService() {
+        return new DeployService(historicalDataDao(), powerShellFactory());
+    }
+
+    @Bean
+    public MessageService messageService() {
+        return new MessageService(powerShellFactory());
+    }
 
 }

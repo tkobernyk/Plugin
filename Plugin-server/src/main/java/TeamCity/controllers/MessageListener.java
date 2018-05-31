@@ -2,13 +2,9 @@ package TeamCity.controllers;
 
 import TeamCity.models.Deploy;
 import TeamCity.models.Environment;
-import TeamCity.powershell.PowerShellFactory;
-import TeamCity.powershell.PowerShellWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import TeamCity.service.MessageService;
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.serverSide.SBuildServer;
-import jetbrains.buildServer.users.SUser;
-import jetbrains.buildServer.web.openapi.PluginDescriptor;
 import jetbrains.buildServer.web.openapi.WebControllerManager;
 import jetbrains.buildServer.web.util.SessionUser;
 import org.jetbrains.annotations.NotNull;
@@ -17,57 +13,30 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Queue;
 
 
 public class MessageListener extends BaseController {
     private static final com.intellij.openapi.diagnostic.Logger Log =
             com.intellij.openapi.diagnostic.Logger.getInstance(DeployControllerAction.class.getName());
+    private MessageService messageService;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-    private PowerShellFactory powerShellFactory;
-    private PluginDescriptor pluginDescriptor;
 
     public MessageListener(
             @NotNull SBuildServer server,
             @NotNull WebControllerManager webControllerManager,
-            @NotNull PowerShellFactory powerShellFactory,
-            @NotNull PluginDescriptor pluginDescriptor) {
+            @NotNull MessageService messageService) {
         super(server);
         webControllerManager.registerController("/messages/getMessage.html", this);
-        this.powerShellFactory = powerShellFactory;
-        this.pluginDescriptor = pluginDescriptor;
+        this.messageService = messageService;
     }
 
     @Nullable
     @Override
     protected ModelAndView doHandle(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response) throws InterruptedException {
-        //Thread.sleep(100000);
-        Deploy deploy = getDeploy(request);
-        SUser sUser = SessionUser.getUser(request);
-        try (OutputStream outputStream = response.getOutputStream()) {
-            PowerShellWrapper powerShellWrapper = powerShellFactory.
-                    getOrCreatePowerShellRunner(deploy, sUser, null, null);
-            String data = processOutput(powerShellWrapper.getQueue());
-            outputStream.write(data.getBytes());
-            powerShellWrapper.getData().append(data);
-        } catch (IOException | InterruptedException e) {
-            Log.error(e.getMessage(), e);
-        }
+        this.messageService.processInputFromPowerShellWrapper(response, getDeploy(request), SessionUser.getUser(request));
         return null;
     }
 
-    private String processOutput(Queue<String> queue) throws InterruptedException {
-        StringBuilder builder = new StringBuilder();
-        int i = 0;
-        while (!queue.isEmpty() && i < 20) {
-            builder.append(queue.poll());
-            i++;
-        }
-        return builder.toString();
-    }
 
     private Deploy getDeploy(HttpServletRequest request) {
         Deploy deploy = new Deploy();
@@ -75,7 +44,6 @@ public class MessageListener extends BaseController {
         deploy.setProjectName(request.getParameter("ProjectName"));
         deploy.setEnvironment(Environment.valueOf(request.getParameter("Environment")));
         deploy.setPhase(request.getParameter("Phase"));
-        // Log.info("Deploy: " + deploy.toString());
         return deploy;
     }
 
